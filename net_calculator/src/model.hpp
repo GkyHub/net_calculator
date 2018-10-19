@@ -11,7 +11,14 @@ private:
 public:
     Model();
     ~Model();
+
     template<typename T>
-    Net *add(const T &layer);
+    Net *add(const T &layer)
+	{
+		Net *l = (Net *)(new T(layer));
+		_layers.push_back(l);
+		return l;
+	}
+
     void Profile(std::string file_name);
-}
+};

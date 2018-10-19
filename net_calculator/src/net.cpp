@@ -28,8 +28,8 @@ tsize_t Input::getOutputSize() { return _input_size; }
 Conv2D::Conv2D(std::string name, std::vector<Net *> src, tsize_t param_size, 
     tsize_t stride, nl_t nl) : Net(name, src)
 {
-    assert(param_size.size() == 2);
-    assert(stride.size() == 1);
+    assert(param_size.size() == 3);
+    assert(stride.size() == 2);
     _param_size = param_size;
     _stride = stride;
     _nl = nl;
@@ -39,7 +39,7 @@ Conv2D::Conv2D(std::string name, std::vector<Net *> src, tsize_t param_size,
 
     // concat if there are more sources
     if (src.size() > 1) {
-        for (int i = 1; i < src.size(); i++) {
+        for (uint32_t i = 1; i < src.size(); i++) {
             assert(concat(_input_size, src[i]->getOutputSize()));
         }
     }

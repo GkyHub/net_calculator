@@ -1,5 +1,6 @@
 #include <string>
 #include "typedef.hpp"
+#include "util.hpp"
 
 // convert a number to string and add a unit (G, M, B) to it
 std::string unit_str(double n)
@@ -25,7 +26,7 @@ bool concat(tsize_t a, tsize_t b)
     if (a.size() != b.size()) {
         return false;
     }
-    for (int i = 1; i < a.size(); i++) {
+    for (uint32_t i = 1; i < a.size(); i++) {
         if (a[i] != b[i]) {
             return false;
         }
@@ -43,3 +44,5 @@ uint32_t volume(tsize_t s)
     }
     return v;
 }
+
+

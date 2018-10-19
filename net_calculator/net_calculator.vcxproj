@@ -139,10 +139,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\model.cpp" />
     <ClCompile Include="src\net.cpp" />
     <ClCompile Include="src\util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\model.hpp" />
     <ClInclude Include="src\net.hpp" />
     <ClInclude Include="src\typedef.hpp" />
     <ClInclude Include="src\util.hpp" />

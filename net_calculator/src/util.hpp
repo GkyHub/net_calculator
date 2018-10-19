@@ -1,5 +1,6 @@
 #pragma once
 #include "typedef.hpp"
+#include <string>
 
 // convert a number to string and add a unit (G, M, B) to it
 std::string unit_str(double n);
@@ -12,15 +13,15 @@ bool concat(tsize_t a, tsize_t b);
 uint32_t volume(tsize_t s);
 
 // csv format
+template<typename T1>
+void csvPrintLn(std::ostream &os, const T1 &arg1)
+{
+	os << arg1 << std::endl;
+}
+
 template<typename T1, typename... T2>
-void csvPrintLn(std::ostream &os, T1 arg1, T2... arg2)
+void csvPrintLn(std::ostream &os, const T1 &arg1, T2... arg2)
 {
-    os << arg1 << ",";
-    csvPrintLn(os, arg2);
+	os << arg1 << ",";
+	csvPrintLn(os, arg2...);
 }
-
-void csvPrintLn(std::ostream &os)
-{
-    os << std::endl;
-}
-
