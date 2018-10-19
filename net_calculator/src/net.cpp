@@ -7,6 +7,11 @@
 //=========================================================
 Net::Net(std::string name, std::vector<Net *> src) : name(name), _src(src)
 {
+	if (!src.empty()) {
+		for (Net *n : src) {
+			n->_dst.push_back(n);
+		}
+	}
 }
 
 void Net::addDst(Net *dst)
@@ -54,14 +59,14 @@ tsize_t Conv2D::getOutputSize()
 
 double  Conv2D::getParamNum()
 {
-    return _param_size[0] * _param_size[1] * _param_size[2];
+    return _param_size[0] * _param_size[1] * _param_size[2] * _input_size[0];
 }
 
 // TODO: consider drop out and weight sparsity
 double  Conv2D::getInferenceMacNum()
 {
     tsize_t o_size = getOutputSize();
-    return o_size[0] * o_size[1] * o_size[2] * _param_size[1] * _param_size[2];
+    return o_size[0] * o_size[1] * o_size[2] * _param_size[1] * _param_size[2] * _input_size[0];
 }
 
 // TODO: consider error & weight sparsity
@@ -135,7 +140,8 @@ Pool::Pool(std::string name, Net *src, tsize_t pool_size, tsize_t stride)
 tsize_t Pool::getOutputSize()
 {
     return {
-        _input_size[0] / _stride[0],
-        _input_size[1] / _stride[1]
+		_input_size[0],
+        _input_size[1] / _stride[0],
+        _input_size[2] / _stride[1]
     };
 }

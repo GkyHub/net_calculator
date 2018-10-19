@@ -52,5 +52,12 @@ void Model::Profile(std::string file_name)
             input_volume[i]);
     }
 
+	csvPrintLn(os, "Total",
+		unit_str(sum(inference_mac)),
+		unit_str(sum(propagation_mac)),
+		unit_str(sum(update_mac)),
+		unit_str(sum(weight_volume)));
+
+
     return;
 }

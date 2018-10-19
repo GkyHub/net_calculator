@@ -25,3 +25,13 @@ void csvPrintLn(std::ostream &os, const T1 &arg1, T2... arg2)
 	os << arg1 << ",";
 	csvPrintLn(os, arg2...);
 }
+
+template<typename T>
+T sum(std::vector<T> vec)
+{
+	T s = 0;
+	for (T &e : vec) {
+		s += e;
+	}
+	return s;
+}

@@ -20,11 +20,11 @@ public:
 
     // returns 0 by default, if a layer do not need MAC and parameter
     // do not need to override these methods
-    double  getInferenceMacNum() { return 0; };
-    double  getPropagationMacNum() { return 0; };
-    double  getUpdateMacNum() { return 0; };
-    double  getParamNum() { return 0; };
-    double  getInputSize() { return 0; };
+    virtual double  getInferenceMacNum() { return 0; };
+    virtual double  getPropagationMacNum() { return 0; };
+    virtual double  getUpdateMacNum() { return 0; };
+    virtual double  getParamNum() { return 0; };
+    virtual double  getInputSize() { return 0; };
 };
 
 // input layer
