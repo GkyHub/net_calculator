@@ -5,10 +5,8 @@
 //=========================================================
 // class Net
 //=========================================================
-Net::Net(std::string name, std::vector<Net *> src)
+Net::Net(std::string name, std::vector<Net *> src) : name(name), _src(src)
 {
-    _name = name;
-    _src  = src;
 }
 
 void Net::addDst(Net *dst)

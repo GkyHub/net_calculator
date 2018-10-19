@@ -5,10 +5,12 @@
 // A network prototype is a acyclic graph with possibly
 // multiple sources and multiple destinations
 class Net {
+public:
+    std::string         name;
+
 protected:
-    std::string         _name;
-    std::vector<Net *>  _src;   // source nets
-    std::vector<Net *>  _dst;   // destination nets
+    std::vector<Net *>  _src;           // source nets
+    std::vector<Net *>  _dst;           // destination nets
     tsize_t             _input_size;
 
 public:
@@ -21,7 +23,8 @@ public:
     double  getInferenceMacNum() { return 0; };
     double  getPropagationMacNum() { return 0; };
     double  getUpdateMacNum() { return 0; };
-    double  getParamNum() { return 0; } ;
+    double  getParamNum() { return 0; };
+    double  getInputSize() { return 0; };
 };
 
 // input layer
