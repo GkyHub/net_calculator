@@ -79,6 +79,14 @@ public:
     tsize_t getOutputSize();
 };
 
+// element-wise layer
+// add two layers of the same shape together
+class EleWise : public Net {
+public:
+    EleWise(std::string name, Net *src1, Net *src2)
+    tsize_t getOutputSize();
+};
+
 
 
 

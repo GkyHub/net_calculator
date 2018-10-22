@@ -45,4 +45,17 @@ uint32_t volume(tsize_t s)
     return v;
 }
 
+bool match(tsize_t s1, tsize_t s2)
+{
+	if (s1.size() != s2.size()) {
+		return false;
+	}
+	for (uint32_t i = 0; i < s1.size(); i++) {
+		if (s1[i] != s2[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
 

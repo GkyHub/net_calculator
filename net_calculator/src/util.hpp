@@ -12,6 +12,9 @@ bool concat(tsize_t a, tsize_t b);
 // calculate the volume of a tensor
 uint32_t volume(tsize_t s);
 
+// match if two tensors are of the same shape
+bool match(tsize_t s1, tsize_t s2);
+
 // csv format
 template<typename T1>
 void csvPrintLn(std::ostream &os, const T1 &arg1)
