@@ -3,12 +3,8 @@
 #include "typedef.hpp"
 #include "vgg.hpp"
 
-Model *vgg11();
 
 int main()
 {
-    Model *m = vgg11();
-	m->Profile("test.csv");
-	delete m;
-    return 0;
+   
 }

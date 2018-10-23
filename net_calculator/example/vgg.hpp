@@ -1,44 +1,45 @@
+// VGG model
+// reference: https://arxiv.org/pdf/1409.1556.pdf
+//
+// example:
+// VGG vgg11 = VGG({1, 1, 2, 2, 2});
+// VGG vgg16 = VGG({2, 2, 3, 3, 3});
+// VGG vgg19 = VGG({2, 2, 4, 4, 4});
+
 #include "model.hpp"
 #include "util.hpp"
 
-Model *VGG11()
-{
-    Model *vgg11 = new Model();
-	Net *input = vgg11->add(Input({3, 224, 224}));
 
-    Net *conv1 = vgg11->add(Conv2D("conv1", {input}, {64, 3, 3}, {1, 1}, nl_t::RELU));
-    Net *pool1 = vgg11->add(Pool("pool1", conv1, {2, 2}, {2, 2}));
+class VGG : public Model {
+public:
+    VGG(uint32_t num[5])
+    {
+        uint32_t size[5] = {64, 128, 256, 512, 512};
 
-    Net *conv2 = vgg11->add(Conv2D("conv2", {pool1}, {128, 3, 3}, {1, 1}, nl_t::RELU));
-    Net *pool2 = vgg11->add(Pool("pool2", conv2, {2, 2}, {2, 2}));
+        Net *x = add(Input({3, 224, 224}));
+        for (uint32_t i = 1; i < 6; i++) {
+            for (uint32_t j = 1; j <= num[i]; j++) {
+                x = add(Conv2D(
+                    "conv" + std::to_string(i) + std::to_string(j),
+                    {x},
+                    {size[i], 3, 3},
+                    {1, 1}
+                ));
+                x = add(NL(
+                    "relu" + std::to_string(i) + std::to_string(j),
+                    x,
+                    NL::Type::RELU
+                ));
+            }
 
-    Net *conv3_1 = vgg11->add(Conv2D("conv3_1", {pool2}, {256, 3, 3}, {1, 1}, nl_t::RELU));
-    Net *conv3_2 = vgg11->add(Conv2D("conv3_2", {conv3_1}, {256, 3, 3}, {1, 1}, nl_t::RELU));
-    Net *pool3 = vgg11->add(Pool("pool3", conv3_2, {2, 2}, {2, 2}));
+            x = add(Pool("pool" + std::to_string(i), x, Pool::Type::MAX, {2, 2}, {2, 2}));
+        }
 
-    Net *conv4_1 = vgg11->add(Conv2D("conv4_1", {pool3}, {512, 3, 3}, {1, 1}, nl_t::RELU));
-    Net *conv4_2 = vgg11->add(Conv2D("conv4_2", {conv4_1}, {512, 3, 3}, {1, 1}, nl_t::RELU));
-    Net *pool4 = vgg11->add(Pool("pool4", conv4_2, {2, 2}, {2, 2}));
-
-    Net *conv5_1 = vgg11->add(Conv2D("conv5_1", {pool4}, {512, 3, 3}, {1, 1}, nl_t::RELU));
-    Net *conv5_2 = vgg11->add(Conv2D("conv5_2", {conv5_1}, {512, 3, 3}, {1, 1}, nl_t::RELU));
-    Net *pool5 = vgg11->add(Pool("pool5", conv5_2, {2, 2}, {2, 2}));
-
-    Net *fc1 = vgg11->add(FC("fc1", {pool5}, 4096, nl_t::RELU));
-    Net *fc2 = vgg11->add(FC("fc2", {fc1}, 4096, nl_t::RELU));
-    Net *fc3 = vgg11->add(FC("fc3", {fc2}, 1000, nl_t::RELU));
-
-    return vgg11;
-}
-
-Model *VGG16()
-{
-    Model *vgg16 = new Model();
-    return vgg16;
-}
-
-Model *VGG19()
-{
-    Model *vgg19 = new Model();
-    return vgg19;
-}
+        x = add(FC("fc1", {x}, 4096));
+        x = add(NL("relu6", x, NL::Type::RELU));
+        x = add(FC("fc2", {x}, 4096));
+        x = add(NL("relu7", x, NL::Type::RELU));
+        x = add(FC("fc3", {x}, 1000));
+        x = add(NL("relu8", x, NL::Type::RELU));
+    }
+};
