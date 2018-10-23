@@ -31,13 +31,12 @@ tsize_t Input::getOutputSize() { return _input_size; }
 // class Conv2D
 //=========================================================
 Conv2D::Conv2D(std::string name, std::vector<Net *> src, tsize_t param_size, 
-    tsize_t stride, nl_t nl) : Net(name, src)
+    tsize_t stride) : Net(name, {src})
 {
     assert(param_size.size() == 3);
     assert(stride.size() == 2);
     _param_size = param_size;
     _stride = stride;
-    _nl = nl;
 
     assert(src.size() > 0);
     _input_size = src[0]->getOutputSize();
@@ -84,8 +83,8 @@ double  Conv2D::getUpdateMacNum()
 //=========================================================
 // class FC
 //=========================================================
-FC::FC(std::string name, std::vector<Net *> src, uint32_t neuron_num, nl_t nl)
-    : Net(name, src)
+FC::FC(std::string name, std::vector<Net *> src, uint32_t neuron_num)
+    : Net(name, {src})
 {
     // concat and flatten
     _input_size.push_back(0);
@@ -94,7 +93,6 @@ FC::FC(std::string name, std::vector<Net *> src, uint32_t neuron_num, nl_t nl)
     }
 
     _neuron_num = neuron_num;
-    _nl = nl;
 }
 
 tsize_t FC::getOutputSize()
@@ -126,23 +124,39 @@ double  FC::getUpdateMacNum()
 }
 
 //=========================================================
+// class NL
+//=========================================================
+
+NL::NL(std::string name, Net *src, NL::Type type)
+    : Net(name, {src}), _type(type)
+{
+    _input_size = src->getOutputSize();
+}
+
+tsize_t NL::getOutputSize()
+{
+    return _input_size;
+}
+
+//=========================================================
 // class Pool
 //=========================================================
 
-Pool::Pool(std::string name, Net *src, tsize_t pool_size, tsize_t stride)
+Pool::Pool(std::string name, Net *src, Type type, tsize_t pool_size, tsize_t stride)
     : Net(name, {src})
 {
     _input_size = src->getOutputSize();
     _pool_size = pool_size;
     _stride = stride;
+    _type = type;
 }
 
 tsize_t Pool::getOutputSize()
 {
     return {
 		_input_size[0],
-        _input_size[1] / _stride[0],
-        _input_size[2] / _stride[1]
+        (_type == Type::GLOBAL) ? 1 : _input_size[1] / _stride[0],
+        (_type == Type::GLOBAL) ? 1 : _input_size[2] / _stride[1]
     };
 }
 

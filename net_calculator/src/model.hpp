@@ -4,7 +4,7 @@
 #include "net.hpp"
 
 class Model {
-private:
+protected:
     std::vector<Net *> _layers;
     std::vector<bool>  _flag;
 

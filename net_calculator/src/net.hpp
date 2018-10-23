@@ -41,10 +41,9 @@ class Conv2D : public Net {
 private:
     tsize_t     _param_size;    // {C, H, W}
     tsize_t     _stride;        // {H, W}
-    nl_t        _nl;
 
 public:
-    Conv2D(std::string name, std::vector<Net *> src, tsize_t param_size, tsize_t stride, nl_t nl);
+    Conv2D(std::string name, std::vector<Net *> src, tsize_t param_size, tsize_t stride);
     tsize_t getOutputSize();
     double  getParamNum();
     double  getInferenceMacNum();
@@ -57,10 +56,9 @@ public:
 class FC : public Net {
 private:
     uint32_t    _neuron_num;
-    nl_t        _nl;
 
 public:
-    FC(std::string name, std::vector<Net *> src, uint32_t neuron_num, nl_t nl);
+    FC(std::string name, std::vector<Net *> src, uint32_t neuron_num);
     tsize_t getOutputSize();
     double  getParamNum();
     double  getInferenceMacNum();
@@ -68,14 +66,34 @@ public:
     double  getUpdateMacNum();
 };
 
+class NL : public Net {
+public:
+    enum class Type {
+        RELU, SIGMOID, TANH
+    };
+
+private:
+    Type _type;
+
+public:
+    NL(std::string name, Net *src, NL::Type t);
+    tsize_t getOutputSize();
+};
+
 // Pooling layer
 class Pool : public Net {
+public:
+    enum class Type {
+        MAX, AVERAGE, GLOBAL
+    };
+
 private:
     tsize_t     _pool_size; // {H, W}
     tsize_t     _stride;    // {H, W}
+    Type        _type;
 
 public:
-    Pool(std::string name, Net *src, tsize_t pool_size, tsize_t stride);
+    Pool(std::string name, Net *src, Type type, tsize_t pool_size, tsize_t stride);
     tsize_t getOutputSize();
 };
 
@@ -83,7 +101,7 @@ public:
 // add two layers of the same shape together
 class EleWise : public Net {
 public:
-    EleWise(std::string name, Net *src1, Net *src2)
+    EleWise(std::string name, Net *src1, Net *src2);
     tsize_t getOutputSize();
 };
 

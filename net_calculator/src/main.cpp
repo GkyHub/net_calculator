@@ -1,7 +1,7 @@
 #include "model.hpp"
 #include "net.hpp"
 #include "typedef.hpp"
-#include "vgg11.hpp"
+#include "vgg.hpp"
 
 Model *vgg11();
 

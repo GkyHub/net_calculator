@@ -1,47 +1,22 @@
+// example model of ResNet v1 series
+// reference: https://github.com/tensorflow/models/tree/master/official/resnet
+
 #include "model.hpp"
 #include "util.hpp"
 
-Net *ResUnit(Module *m, Net *src, uint32_t width, uint32_t res_id)
-{
-    Net *conv1 = m->add(Conv2D(
-       "conv" + std::to_string(res_id) + "_1",
-       src,
-       {width, 3, 3},
-       {1, 1},
-       nl_t::RELU 
-    ));
+class ResNet : public Model {
+public:
+    ResNet(uint32_t size[4], uint32_t num[4], bool use_bottleneck = false);
+    ~ResNet();
+    // basic block
+    Net *PlainBlock(std::string name, Net *src, uint32_t out_channel, uint32_t stride = 1);
+    // bottleneck block
+    Net *Bottleneck(std::string name, Net *src, uint32_t out_channel, uint32_t stride = 1);
+};
 
-    Net *conv2 = m->add(Conv2D(
-       "conv" + std::to_string(res_id) + "_2",
-       src,
-       {width, 3, 3},
-       {1, 1},
-       nl_t::RELU 
-    ));
-
-    Net *res = m->add(EleWise(
-        "res" + std::to_string(res_id),
-        conv2, src
-    ));
-
-    return res;
-}
-
-Model *ResNet18()
-{
-    Model *resnet = new Model();
-
-    Net *input = resnet.add(Input({3, 224, 224}));
-    Net *conv1 = resnet.add(Conv2D("conv1", {input}, {64, 7, 7}, {2, 2}, nl_t:RELU));
-    Net *pool1 = resnet.add(Pool("pool1", conv1, {2, 2}, {2, 2}));
-
-    Net *res1[4];
-    res1[0] = pool1;
-    for (uint32_t i = 0; i < 3; i++) {
-        res1[i + 1] = ResUnit(resnet, res1[i], 64, i + 2);
-    }
-
-    Net *res2[4]
-
-    return resnet;
-}
+// examples
+// resnet18 = ResNet({2, 2, 2, 2}, {64, 128, 256, 512});
+// resnet34 = ResNet({3, 4, 6, 3}, {64, 128, 256, 512});
+// resnet50 = ResNet({3, 4, 6, 3}, {256, 512, 1024, 2048}, true);
+// resnet101 = ResNet({3, 4, 23, 3}, {256, 512, 1024, 2048}, true);
+// resnet152 = ResNet({3, 8, 36, 3}, {256, 512, 1024, 2048}, true);
