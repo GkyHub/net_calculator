@@ -6,33 +6,33 @@
 // VGG vgg16 = VGG({2, 2, 3, 3, 3});
 // VGG vgg19 = VGG({2, 2, 4, 4, 4});
 
-#include "model.hpp"
-#include "util.hpp"
+#include "../src/model.hpp"
+#include "../src/util.hpp"
 
 
 class VGG : public Model {
 public:
-    VGG(uint32_t num[5])
+    VGG(std::vector<uint32_t> num)
     {
         uint32_t size[5] = {64, 128, 256, 512, 512};
 
         Net *x = add(Input({3, 224, 224}));
-        for (uint32_t i = 1; i < 6; i++) {
-            for (uint32_t j = 1; j <= num[i]; j++) {
+        for (uint32_t i = 0; i < 5; i++) {
+            for (uint32_t j = 0; j < num[i]; j++) {
                 x = add(Conv2D(
-                    "conv" + std::to_string(i) + std::to_string(j),
+                    "conv" + std::to_string(i + 1) + std::to_string(j + 1),
                     {x},
                     {size[i], 3, 3},
                     {1, 1}
                 ));
                 x = add(NL(
-                    "relu" + std::to_string(i) + std::to_string(j),
+                    "relu" + std::to_string(i + 1) + std::to_string(j + 1),
                     x,
                     NL::Type::RELU
                 ));
             }
 
-            x = add(Pool("pool" + std::to_string(i), x, Pool::Type::MAX, {2, 2}, {2, 2}));
+            x = add(Pool("pool" + std::to_string(i + 1), x, Pool::Type::MAX, {2, 2}, {2, 2}));
         }
 
         x = add(FC("fc1", {x}, 4096));

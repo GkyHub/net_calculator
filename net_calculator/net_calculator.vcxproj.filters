@@ -41,5 +41,11 @@
     <ClInclude Include="src\model.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="example\resnet.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="example\vgg.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

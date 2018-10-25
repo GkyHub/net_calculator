@@ -167,12 +167,12 @@ tsize_t Pool::getOutputSize()
 EleWise::EleWise(std::string name, Net *src1, Net *src2)
     : Net(name, {src1, src2})
 {
-    assert(match(src1, src2));
-    _input_size = src1.getOutputSize();
+    assert(match(src1->getOutputSize(), src2->getOutputSize()));
+    _input_size = src1->getOutputSize();
     _input_size.push_back(2);
 }
 
-tsize_t getOutputSize()
+tsize_t EleWise::getOutputSize()
 {
     return {_input_size[0], _input_size[1], _input_size[2]};
 }

@@ -8,17 +8,26 @@
 // ResNet resnet101 = ResNet({3, 4, 23, 3}, {256, 512, 1024, 2048}, true);
 // ResNet resnet152 = ResNet({3, 8, 36, 3}, {256, 512, 1024, 2048}, true);
 
-#include "model.hpp"
-#include "util.hpp"
-
-
+#include "../src/model.hpp"
+#include "../src/util.hpp"
+#include <functional>
 
 class ResNet : public Model {
 public:
-    ResNet(uint32_t size[4], uint32_t num[4], bool use_bottleneck = false)
+	ResNet(std::vector<uint32_t> size, std::vector<uint32_t> num, bool use_bottleneck = false)
     {
-        std::function<Net *(std::string, Net *, uint32_t, uint32_t)> res_unit;
-        res_unit = use_bottleneck ? this->Bottleneck : this->PlainBlock;
+        //std::function<Net *(std::string, Net *, uint32_t, uint32_t)> res_unit;
+        // auto res_unit = use_bottleneck ? &ResNet::Bottleneck : &ResNet::PlainBlock;
+		auto res_unit = [&](std::string name, Net *x, uint32_t channel, uint32_t stride = 1)
+		{
+			if (use_bottleneck) {
+				return Bottleneck(name, x, channel, stride);
+			}
+			else {
+				return PlainBlock(name, x, channel, stride);
+			}
+		};
+
         Net *x = add(Input({3, 224, 224}));
 
         x = add(Conv2D("conv1", {x}, {size[0], 7, 7}, {2, 2}));
