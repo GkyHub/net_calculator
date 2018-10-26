@@ -11,12 +11,12 @@ public:
 protected:
     std::vector<Net *>  _src;           // source nets
     std::vector<Net *>  _dst;           // destination nets
-    tsize_t             _input_size;
+    shape_t             _input_size;
 
 public:
     Net(std::string name, std::vector<Net *> src);
     void    addDst(Net *dst);   // add a destination network
-    virtual tsize_t getOutputSize() = 0;
+    virtual shape_t getOutputShape() = 0;
 
     // returns 0 by default, if a layer do not need MAC and parameter
     // do not need to override these methods
@@ -31,20 +31,20 @@ public:
 // name for input layer is always "input"
 class Input : public Net {
 public:
-    Input(tsize_t size);
-    tsize_t getOutputSize();
+    Input(shape_t size);
+    shape_t getOutputShape();
 };
 
 // 2D convolutional layer
 // automatically concat previous layers
 class Conv2D : public Net {
 private:
-    tsize_t     _param_size;    // {C, H, W}
-    tsize_t     _stride;        // {H, W}
+    shape_t     _param_size;    // {C, H, W}
+    shape_t     _stride;        // {H, W}
 
 public:
-    Conv2D(std::string name, std::vector<Net *> src, tsize_t param_size, tsize_t stride);
-    tsize_t getOutputSize();
+    Conv2D(std::string name, std::vector<Net *> src, shape_t param_size, shape_t stride);
+    shape_t getOutputShape();
     double  getParamNum();
     double  getInferenceMacNum();
     double  getPropagationMacNum();
@@ -59,7 +59,7 @@ private:
 
 public:
     FC(std::string name, std::vector<Net *> src, uint32_t neuron_num);
-    tsize_t getOutputSize();
+    shape_t getOutputShape();
     double  getParamNum();
     double  getInferenceMacNum();
     double  getPropagationMacNum();
@@ -77,7 +77,7 @@ private:
 
 public:
     NL(std::string name, Net *src, NL::Type t);
-    tsize_t getOutputSize();
+    shape_t getOutputShape();
 };
 
 // Pooling layer
@@ -88,13 +88,13 @@ public:
     };
 
 private:
-    tsize_t     _pool_size; // {H, W}
-    tsize_t     _stride;    // {H, W}
+    shape_t     _pool_size; // {H, W}
+    shape_t     _stride;    // {H, W}
     Type        _type;
 
 public:
-    Pool(std::string name, Net *src, Type type, tsize_t pool_size, tsize_t stride);
-    tsize_t getOutputSize();
+    Pool(std::string name, Net *src, Type type, shape_t pool_size, shape_t stride);
+    shape_t getOutputShape();
 };
 
 // element-wise layer
@@ -102,7 +102,7 @@ public:
 class EleWise : public Net {
 public:
     EleWise(std::string name, Net *src1, Net *src2);
-    tsize_t getOutputSize();
+    shape_t getOutputShape();
 };
 
 

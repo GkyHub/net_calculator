@@ -23,15 +23,15 @@ void Net::addDst(Net *dst)
 //=========================================================
 // class Input
 //=========================================================
-Input::Input(tsize_t size) : Net("input", {}) { _input_size = size; }
+Input::Input(shape_t size) : Net("input", {}) { _input_size = size; }
 
-tsize_t Input::getOutputSize() { return _input_size; }
+shape_t Input::getOutputShape() { return _input_size; }
 
 //=========================================================
 // class Conv2D
 //=========================================================
-Conv2D::Conv2D(std::string name, std::vector<Net *> src, tsize_t param_size, 
-    tsize_t stride) : Net(name, {src})
+Conv2D::Conv2D(std::string name, std::vector<Net *> src, shape_t param_size, 
+    shape_t stride) : Net(name, {src})
 {
     assert(param_size.size() == 3);
     assert(stride.size() == 2);
@@ -39,17 +39,17 @@ Conv2D::Conv2D(std::string name, std::vector<Net *> src, tsize_t param_size,
     _stride = stride;
 
     assert(src.size() > 0);
-    _input_size = src[0]->getOutputSize();
+    _input_size = src[0]->getOutputShape();
 
     // concat if there are more sources
     if (src.size() > 1) {
         for (uint32_t i = 1; i < src.size(); i++) {
-            assert(concat(_input_size, src[i]->getOutputSize()));
+            assert(concat(_input_size, src[i]->getOutputShape()));
         }
     }
 }
 
-tsize_t Conv2D::getOutputSize()
+shape_t Conv2D::getOutputShape()
 {
     return {_param_size[0], 
             _input_size[1] / _stride[0], 
@@ -64,7 +64,7 @@ double  Conv2D::getParamNum()
 // TODO: consider drop out and weight sparsity
 double  Conv2D::getInferenceMacNum()
 {
-    tsize_t o_size = getOutputSize();
+    shape_t o_size = getOutputShape();
     return o_size[0] * o_size[1] * o_size[2] * _param_size[1] * _param_size[2] * _input_size[0];
 }
 
@@ -89,13 +89,13 @@ FC::FC(std::string name, std::vector<Net *> src, uint32_t neuron_num)
     // concat and flatten
     _input_size.push_back(0);
     for (auto net : src) {
-        _input_size[0] += volume(net->getOutputSize());
+        _input_size[0] += volume(net->getOutputShape());
     }
 
     _neuron_num = neuron_num;
 }
 
-tsize_t FC::getOutputSize()
+shape_t FC::getOutputShape()
 {
     return {_neuron_num};
 }
@@ -130,10 +130,10 @@ double  FC::getUpdateMacNum()
 NL::NL(std::string name, Net *src, NL::Type type)
     : Net(name, {src}), _type(type)
 {
-    _input_size = src->getOutputSize();
+    _input_size = src->getOutputShape();
 }
 
-tsize_t NL::getOutputSize()
+shape_t NL::getOutputShape()
 {
     return _input_size;
 }
@@ -142,16 +142,16 @@ tsize_t NL::getOutputSize()
 // class Pool
 //=========================================================
 
-Pool::Pool(std::string name, Net *src, Type type, tsize_t pool_size, tsize_t stride)
+Pool::Pool(std::string name, Net *src, Type type, shape_t pool_size, shape_t stride)
     : Net(name, {src})
 {
-    _input_size = src->getOutputSize();
+    _input_size = src->getOutputShape();
     _pool_size = pool_size;
     _stride = stride;
     _type = type;
 }
 
-tsize_t Pool::getOutputSize()
+shape_t Pool::getOutputShape()
 {
     return {
 		_input_size[0],
@@ -167,12 +167,12 @@ tsize_t Pool::getOutputSize()
 EleWise::EleWise(std::string name, Net *src1, Net *src2)
     : Net(name, {src1, src2})
 {
-    assert(match(src1->getOutputSize(), src2->getOutputSize()));
-    _input_size = src1->getOutputSize();
+    assert(match(src1->getOutputShape(), src2->getOutputShape()));
+    _input_size = src1->getOutputShape();
     _input_size.push_back(2);
 }
 
-tsize_t EleWise::getOutputSize()
+shape_t EleWise::getOutputShape()
 {
     return {_input_size[0], _input_size[1], _input_size[2]};
 }

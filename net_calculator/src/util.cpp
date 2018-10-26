@@ -21,7 +21,7 @@ std::string unit_str(double n)
 
 // concat layer b to layer a, add the first dimension
 // return false if the size does not match
-bool concat(tsize_t a, tsize_t b)
+bool concat(shape_t a, shape_t b)
 {
     if (a.size() != b.size()) {
         return false;
@@ -36,7 +36,7 @@ bool concat(tsize_t a, tsize_t b)
 }
 
 // calculate the volume of a tensor
-uint32_t volume(tsize_t s)
+uint32_t volume(shape_t s)
 {
     uint32_t v = 1;
     for (auto dim : s) {
@@ -45,7 +45,7 @@ uint32_t volume(tsize_t s)
     return v;
 }
 
-bool match(tsize_t s1, tsize_t s2)
+bool match(shape_t s1, shape_t s2)
 {
 	if (s1.size() != s2.size()) {
 		return false;

@@ -14,7 +14,7 @@
 
 class ResNet : public Model {
 public:
-	ResNet(std::vector<uint32_t> size, std::vector<uint32_t> num, bool use_bottleneck = false)
+	ResNet(std::vector<uint32_t> num, std::vector<uint32_t> size, bool use_bottleneck = false)
     {
         //std::function<Net *(std::string, Net *, uint32_t, uint32_t)> res_unit;
         // auto res_unit = use_bottleneck ? &ResNet::Bottleneck : &ResNet::PlainBlock;
@@ -53,13 +53,13 @@ public:
     {
         Net *x = src;
         Net *shortcut = src;
-        tsize_t s = {stride, stride};
+        shape_t s = {stride, stride};
 
         x = add(Conv2D(name + "_conv1", {x}, {out_channel, 3, 3}, s));
         x = add(NL(name + "_relu1", x, NL::Type::RELU));
         x = add(Conv2D(name + "_conv2", {x}, {out_channel, 3, 3}, {1, 1}));
 
-        if (!match(x->getOutputSize(), src->getOutputSize())) {
+        if (!match(x->getOutputShape(), src->getOutputShape())) {
             shortcut = add(Conv2D(name + "_short", {src}, {out_channel, 1, 1}, s));
         }
 
@@ -74,7 +74,7 @@ public:
     {
         Net *x = src;
         Net *shortcut = src;
-        tsize_t s = {stride, stride};
+        shape_t s = {stride, stride};
 
         x = add(Conv2D(name + "_conv1", {x}, {out_channel / 4, 1, 1}, s));
         x = add(NL(name + "_relu1", x, NL::Type::RELU));
@@ -82,7 +82,7 @@ public:
         x = add(NL(name + "_relu2", x, NL::Type::RELU));
         x = add(Conv2D(name + "_conv3", {x}, {out_channel, 1, 1}, {1, 1}));
 
-        if (!match(x->getOutputSize(), src->getOutputSize())) {
+        if (!match(x->getOutputShape(), src->getOutputShape())) {
             shortcut = add(Conv2D(name + "_short", {src}, {out_channel, 1, 1}, s));
         }
 
