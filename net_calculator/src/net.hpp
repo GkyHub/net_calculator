@@ -25,6 +25,8 @@ public:
     virtual double  getUpdateMacNum() { return 0; };
     virtual double  getParamNum() { return 0; };
     virtual double  getInputSize() { return 0; };
+    virtual double  getOutputSparsity() { return 1.0; }
+    virtual double  getInputSparsity() { return 1.0; }
 };
 
 // input layer
@@ -41,9 +43,10 @@ class Conv2D : public Net {
 private:
     shape_t     _param_size;    // {C, H, W}
     shape_t     _stride;        // {H, W}
+    double      _sparsity;      // ratio of non-zero value
 
 public:
-    Conv2D(std::string name, std::vector<Net *> src, shape_t param_size, shape_t stride);
+    Conv2D(std::string name, std::vector<Net *> src, shape_t param_size, shape_t stride, double sparsity = 1);
     shape_t getOutputShape();
     double  getParamNum();
     double  getInferenceMacNum();
@@ -56,9 +59,10 @@ public:
 class FC : public Net {
 private:
     uint32_t    _neuron_num;
+    double      _sparsity;
 
 public:
-    FC(std::string name, std::vector<Net *> src, uint32_t neuron_num);
+    FC(std::string name, std::vector<Net *> src, uint32_t neuron_num, double sparsity = 1);
     shape_t getOutputShape();
     double  getParamNum();
     double  getInferenceMacNum();
@@ -78,6 +82,8 @@ private:
 public:
     NL(std::string name, Net *src, NL::Type t);
     shape_t getOutputShape();
+    double  getInputSparsity();
+    double  getOutputSparsity();
 };
 
 // Pooling layer
@@ -95,6 +101,8 @@ private:
 public:
     Pool(std::string name, Net *src, Type type, shape_t pool_size, shape_t stride);
     shape_t getOutputShape();
+    double  getOutputSparsity();
+    double  getInputSparsity();
 };
 
 // element-wise layer

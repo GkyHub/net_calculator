@@ -31,12 +31,14 @@ shape_t Input::getOutputShape() { return _input_size; }
 // class Conv2D
 //=========================================================
 Conv2D::Conv2D(std::string name, std::vector<Net *> src, shape_t param_size, 
-    shape_t stride) : Net(name, {src})
+    shape_t stride, double sparsity) : Net(name, {src})
 {
     assert(param_size.size() == 3);
     assert(stride.size() == 2);
+    assert(sparsity > 0.0 && sparsity <= 1.0);
     _param_size = param_size;
     _stride = stride;
+    _sparsity = sparsity;
 
     assert(src.size() > 0);
     _input_size = src[0]->getOutputShape();
@@ -83,10 +85,13 @@ double  Conv2D::getUpdateMacNum()
 //=========================================================
 // class FC
 //=========================================================
-FC::FC(std::string name, std::vector<Net *> src, uint32_t neuron_num)
+FC::FC(std::string name, std::vector<Net *> src, uint32_t neuron_num, double sparsity)
     : Net(name, {src})
 {
     // concat and flatten
+    assert(sparsity > 0.0 && sparsity <= 1.0);
+    _sparsity = sparsity;
+
     _input_size.push_back(0);
     for (auto net : src) {
         _input_size[0] += volume(net->getOutputShape());
