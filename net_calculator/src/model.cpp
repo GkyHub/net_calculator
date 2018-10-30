@@ -17,7 +17,7 @@ Model::~Model()
 }
 
 
-void Model::Profile(std::string file_name)
+void Model::Profile(std::string file_name, std::set<Net::type_t> layer_filter)
 {
     std::ofstream os(file_name, std::ios::out);
     int n = _layers.size();

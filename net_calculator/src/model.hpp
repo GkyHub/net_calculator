@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <set>
 #include "net.hpp"
 
 class Model {
@@ -20,5 +21,5 @@ public:
 		return l;
 	}
 
-    void Profile(std::string file_name);
+    void Profile(std::string file_name, std::set<Net::type_t> layer_filter);
 };

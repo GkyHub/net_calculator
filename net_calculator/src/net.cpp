@@ -5,33 +5,70 @@
 //=========================================================
 // class Net
 //=========================================================
-Net::Net(std::string name, std::vector<Net *> src) : name(name), _src(src)
+Net::Net(type_t type, std::string name, std::vector<Net *> src) 
+    : name(name), _src(src), _type(type)
 {
 	if (!src.empty()) {
 		for (Net *n : src) {
 			n->_dst.push_back(n);
 		}
 	}
+    _fp_act_mask = -1.0;
+    _bp_err_mask = -1.0;
 }
 
-void Net::addDst(Net *dst)
+void Net::forwardStaticSparsity()
 {
-    _dst.push_back(dst);
-    return;
+    if (_fp_act_mask < 0) {
+        _fp_act_mask = 1.0;
+    }
+}
+
+void Net::backwardStaticSparsity()
+{
+    if (_bp_err_mask < 0) {
+        _bp_err_mask = 1.0;
+    }
+}
+
+void Net::maskAct(double p)
+{
+    if (_fp_act_mask < 0) {
+        _fp_act_mask = p;
+    }
+    else {
+        _fp_act_mask = 1 - (1 - _fp_act_mask) * (1 - p);
+    }    
+}
+
+void Net::maskErr(double p)
+{
+    if (_bp_err_mask < 0) {
+        _bp_err_mask = p;
+    }
+    else {
+        _bp_err_mask = 1 - (1 - _bp_err_mask) * (1 - p);
+    }
 }
 
 //=========================================================
 // class Input
 //=========================================================
-Input::Input(shape_t size) : Net("input", {}) { _input_size = size; }
+Input::Input(shape_t size) : Net(Net::Input, "input", {}) 
+{ 
+    _input_size = size; 
+}
 
-shape_t Input::getOutputShape() { return _input_size; }
+shape_t Input::getOutputShape() 
+{ 
+    return _input_size; 
+}
 
 //=========================================================
 // class Conv2D
 //=========================================================
 Conv2D::Conv2D(std::string name, std::vector<Net *> src, shape_t param_size, 
-    shape_t stride, double sparsity) : Net(name, {src})
+    shape_t stride, double sparsity) : Net(Net::Conv2D, name, {src})
 {
     assert(param_size.size() == 3);
     assert(stride.size() == 2);
@@ -86,7 +123,7 @@ double  Conv2D::getUpdateMacNum()
 // class FC
 //=========================================================
 FC::FC(std::string name, std::vector<Net *> src, uint32_t neuron_num, double sparsity)
-    : Net(name, {src})
+    : Net(Net::FC, name, {src})
 {
     // concat and flatten
     assert(sparsity > 0.0 && sparsity <= 1.0);
@@ -132,8 +169,8 @@ double  FC::getUpdateMacNum()
 // class NL
 //=========================================================
 
-NL::NL(std::string name, Net *src, NL::Type type)
-    : Net(name, {src}), _type(type)
+NL::NL(std::string name, Net *src, type_t type)
+    : Net(Net::NL, name, {src}), _nl_type(type)
 {
     _input_size = src->getOutputShape();
 }
@@ -143,25 +180,56 @@ shape_t NL::getOutputShape()
     return _input_size;
 }
 
+double NL::dynamicActSparsity()
+{
+    if (_type == RELU) {
+        return _src[0]->dynamicActSparsity() * 0.5;
+    } 
+    else {
+        return 1.0;
+    }
+}
+
+double NL::dynamicErrSparsity()
+{    
+    if (_type == RELU) {
+        double zr;
+        if (!_dst.empty()) {
+            zr = 1.0;
+            for (auto l : _dst) {
+                zr *= 1.0 - l->dynamicErrSparsity();
+            }
+        }
+        else {
+            zr = 0.0;
+        }
+        return 0.5 * (1 - zr);
+    }
+    else {
+        return 1.0;
+    }
+}
+
+
 //=========================================================
 // class Pool
 //=========================================================
 
-Pool::Pool(std::string name, Net *src, Type type, shape_t pool_size, shape_t stride)
-    : Net(name, {src})
+Pool::Pool(std::string name, Net *src, type_t type, shape_t pool_size, shape_t stride)
+    : Net(NL::Pool, name, {src})
 {
     _input_size = src->getOutputShape();
     _pool_size = pool_size;
     _stride = stride;
-    _type = type;
+    _pool_type = type;
 }
 
 shape_t Pool::getOutputShape()
 {
     return {
 		_input_size[0],
-        (_type == Type::GLOBAL) ? 1 : _input_size[1] / _stride[0],
-        (_type == Type::GLOBAL) ? 1 : _input_size[2] / _stride[1]
+        (_type == GLOBAL) ? 1 : _input_size[1] / _stride[0],
+        (_type == GLOBAL) ? 1 : _input_size[2] / _stride[1]
     };
 }
 
@@ -170,7 +238,7 @@ shape_t Pool::getOutputShape()
 //=========================================================
 
 EleWise::EleWise(std::string name, Net *src1, Net *src2)
-    : Net(name, {src1, src2})
+    : Net(Net::EleWise, name, {src1, src2})
 {
     assert(match(src1->getOutputShape(), src2->getOutputShape()));
     _input_size = src1->getOutputShape();
@@ -180,4 +248,40 @@ EleWise::EleWise(std::string name, Net *src1, Net *src2)
 shape_t EleWise::getOutputShape()
 {
     return {_input_size[0], _input_size[1], _input_size[2]};
+}
+
+void EleWise::maskErr()
+
+void EleWise::forwardStaticSparsity()
+{
+    _src[0]->maskAct(_fp_act_mask);
+    _src[1]->maskAct(_fp_act_mask);
+}
+
+void EleWise::backwardStaticSparsity()
+{
+
+}
+
+//=========================================================
+// class Dropout
+//=========================================================
+
+Dropout::Dropout(Net *src, double keep_prob)
+    : Net(Net::Dropout, "dropout", {src})
+{
+    _fp_act_mask = keep_prob;
+    _bp_err_mask = keep_prob;
+}
+
+void Dropout::forwardStaticSparsity()
+{
+    _src[0]->maskAct(_fp_act_mask);
+}
+
+void Dropout::backwardStaticSparsity()
+{
+    for (auto l : _dst) {
+        l->maskErr(_bp_err_mask);
+    }
 }
