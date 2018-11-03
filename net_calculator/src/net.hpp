@@ -67,6 +67,9 @@ public:
     double  getInferenceMacNum();
     double  getPropagationMacNum();
     double  getUpdateMacNum();
+
+    void forwardStaticSparsity();
+    void backwardStaticSparsity();
 };
 
 // fully connected layer
@@ -83,6 +86,9 @@ public:
     double  getInferenceMacNum();
     double  getPropagationMacNum();
     double  getUpdateMacNum();
+
+    void forwardStaticSparsity();
+    void backwardStaticSparsity();
 };
 
 class NL : public Net {
@@ -97,8 +103,8 @@ public:
     type_t  getNLType() { return _nl_type; };
 
     shape_t getOutputShape();
-    double  dynamicErrSparsity();
-    double  dynamicActSparsity();
+    double dynamicActSparsity();
+    void backwardStaticSparsity();
 };
 
 // Pooling layer
@@ -115,8 +121,9 @@ public:
     Pool(std::string name, Net *src, type_t type, shape_t pool_size, shape_t stride);
     type_t  getPoolType() { return _pool_type; };
     shape_t getOutputShape();
-    double  dynamicActSparsity();
+
     double  dynamicErrSparsity();
+    void backwardStaticSparsity();
 };
 
 // element-wise layer
@@ -126,9 +133,7 @@ public:
     EleWise(std::string name, Net *src1, Net *src2);
     shape_t getOutputShape();
 
-    void maskErr();
-    void forwardStaticSparsity();
-    void backwardStaticSparsity();
+    void maskErr(double p);
 };
 
 // dropout layer
@@ -137,9 +142,6 @@ class Dropout : public Net {
 public:
     Dropout(Net *src, double keep_prob);
     shape_t getOutputShape();
-
-    void forwardStaticSparsity();
-    void backwardStaticSparsity();
 }
 
 

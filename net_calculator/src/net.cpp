@@ -1,6 +1,7 @@
 #include "net.hpp"
 #include "util.hpp"
 #include <assert.h>
+#include <math.h>
 
 //=========================================================
 // class Net
@@ -19,15 +20,15 @@ Net::Net(type_t type, std::string name, std::vector<Net *> src)
 
 void Net::forwardStaticSparsity()
 {
-    if (_fp_act_mask < 0) {
-        _fp_act_mask = 1.0;
+    for (auto l : _src) {
+        l->maskAct(_fp_act_mask);
     }
 }
 
 void Net::backwardStaticSparsity()
 {
-    if (_bp_err_mask < 0) {
-        _bp_err_mask = 1.0;
+    for (auto l : _dst) {
+        l->maskErr(_bp_err_mask);
     }
 }
 
@@ -119,6 +120,20 @@ double  Conv2D::getUpdateMacNum()
     return getInferenceMacNum();
 }
 
+void Conv2D::forwardStaticSparsity()
+{
+    for (auto l : _src) {
+        l->maskAct(1.0);
+    }
+}
+
+void Conv2D::backwardStaticSparsity()
+{
+    for (auto l : _dst) {
+        l->maskErr(1.0);
+    }
+}
+
 //=========================================================
 // class FC
 //=========================================================
@@ -165,6 +180,20 @@ double  FC::getUpdateMacNum()
     return _input_size[0] * _neuron_num;
 }
 
+void FC::forwardStaticSparsity()
+{
+    for (auto l : _src) {
+        l->maskAct(1.0);
+    }
+}
+
+void FC::backwardStaticSparsity()
+{
+    for (auto l : _dst) {
+        l->maskErr(1.0);
+    }
+}
+
 //=========================================================
 // class NL
 //=========================================================
@@ -182,34 +211,15 @@ shape_t NL::getOutputShape()
 
 double NL::dynamicActSparsity()
 {
-    if (_type == RELU) {
-        return _src[0]->dynamicActSparsity() * 0.5;
-    } 
-    else {
-        return 1.0;
-    }
+    return (_type == RELU) ? 0.5 : 1.0;
 }
 
-double NL::dynamicErrSparsity()
-{    
-    if (_type == RELU) {
-        double zr;
-        if (!_dst.empty()) {
-            zr = 1.0;
-            for (auto l : _dst) {
-                zr *= 1.0 - l->dynamicErrSparsity();
-            }
-        }
-        else {
-            zr = 0.0;
-        }
-        return 0.5 * (1 - zr);
-    }
-    else {
-        return 1.0;
+void NL::backwardStaticSparsity()
+{
+    for (auto l : _dst) {
+        l->maskErr((_type == RELU) ? (0.5 * _bp_err_mask) : _bp_err_mask);
     }
 }
-
 
 //=========================================================
 // class Pool
@@ -233,6 +243,19 @@ shape_t Pool::getOutputShape()
     };
 }
 
+double Pool::dynamicErrSparsity()
+{
+    return (_type == MAX) ? (1.0 / (_stride[0] * _stride[1])) : 1.0;
+}
+
+void Pool::backwardStaticSparsity()
+{
+    for (auto l : _dst) {
+        l->maskErr(1 - pow(1 - _bp_err_mask, 
+            _stride[0] * _stride[1]));
+    }
+}
+
 //=========================================================
 // class EleWise
 //=========================================================
@@ -250,17 +273,16 @@ shape_t EleWise::getOutputShape()
     return {_input_size[0], _input_size[1], _input_size[2]};
 }
 
-void EleWise::maskErr()
-
-void EleWise::forwardStaticSparsity()
+void EleWise::maskErr(double p)
 {
-    _src[0]->maskAct(_fp_act_mask);
-    _src[1]->maskAct(_fp_act_mask);
-}
-
-void EleWise::backwardStaticSparsity()
-{
-
+    static double p_left = 0;
+    if (_bp_err_mask < 0) {
+        _bp_err_mask = 1.0;
+        p_left = p;
+    }
+    else {
+        _bp_err_mask = 1 - (1 - p_left) * (1 - p);
+    }
 }
 
 //=========================================================
@@ -272,16 +294,4 @@ Dropout::Dropout(Net *src, double keep_prob)
 {
     _fp_act_mask = keep_prob;
     _bp_err_mask = keep_prob;
-}
-
-void Dropout::forwardStaticSparsity()
-{
-    _src[0]->maskAct(_fp_act_mask);
-}
-
-void Dropout::backwardStaticSparsity()
-{
-    for (auto l : _dst) {
-        l->maskErr(_bp_err_mask);
-    }
 }

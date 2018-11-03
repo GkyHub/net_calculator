@@ -36,6 +36,10 @@
         "xstring": "cpp",
         "xtr1common": "cpp",
         "xutility": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "set": "cpp",
+        "tuple": "cpp",
+        "xfunctional": "cpp",
+        "xtree": "cpp"
     }
 }

@@ -22,4 +22,6 @@ public:
 	}
 
     void Profile(std::string file_name, std::set<Net::type_t> layer_filter);
+
+    void EvalStaticSparsity();
 };

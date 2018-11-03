@@ -16,6 +16,18 @@ Model::~Model()
     }
 }
 
+void Model::EvalStaticSparsity()
+{
+    for (int32_t i = _layers.size() - 1; i >= 0; i--) {
+        _layers[i]->forwardStaticSparsity();
+    }
+
+    for (int32_t i = 0; i < _layers.size(); i++) {
+        _layers[i]->backwardStaticSparsity();
+    }
+    return;
+}
+
 
 void Model::Profile(std::string file_name, std::set<Net::type_t> layer_filter)
 {
