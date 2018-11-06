@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "typedef.hpp"
+#include "tensor.hpp"
 
 // A network prototype is a acyclic graph with possibly
 // multiple sources and multiple destinations
@@ -13,25 +14,22 @@ protected:
     type_t              _type;
     std::vector<Net *>  _src;           // source nets
     std::vector<Net *>  _dst;           // destination nets
-    shape_t             _input_size;
-    double              _fp_act_mask;   // ratio of non zero activations that is determined before inference
-    double              _bp_err_mask;   // ratio of non zero propagated errors is determined before back propagation
+    Tensor              _input;         // activation tensor
+    Tensor              _output;        // error tensor
 
 public:
     Net(type_t type, std::string name, std::vector<Net *> src);
-    type_t          getType() { return _type; };
-    double          getFpActMask() { return _fp_act_mask; };
-    double          getBpErrMask() { return _bp_err_mask; };
-
-    virtual shape_t getOutputShape() = 0;
+    type_t type()  { return _type; };
+    Tensor input() { return _input; };
+    Tensor output() { return _output; };
 
     // returns 0 by default, if a layer do not need MAC and parameter
     // do not need to override these methods
-    virtual double  getInferenceMacNum()    { return 0; };
-    virtual double  getPropagationMacNum()  { return 0; };
-    virtual double  getUpdateMacNum()       { return 0; };
-    virtual double  getParamNum()           { return 0; };
-    virtual double  getInputSize()          { return 0; };
+    virtual uint64_t  getInferenceMacNum()    { return 0; };
+    virtual uint64_t  getPropagationMacNum()  { return 0; };
+    virtual uint64_t  getUpdateMacNum()       { return 0; };
+    virtual uint64_t  getParamNum()           { return 0; };
+    virtual uint64_t  getInputSize()          { return 0; };
 
     // return the dynamic sparsity 
     virtual double  dynamicActSparsity() { return 1.0; };
@@ -51,24 +49,21 @@ public:
 class Input : public Net {
 public:
     Input(shape_t size);
-    shape_t getOutputShape();
 };
 
 // 2D convolutional layer
 // automatically concat previous layers
 class Conv2D : public Net {
 private:
-    shape_t     _param_size;    // {C, H, W}
+    Tensor      _kernel;    // {C, H, W}
     shape_t     _stride;        // {H, W}
-    double      _sparsity;      // ratio of non-zero weights
 
 public:
-    Conv2D(std::string name, std::vector<Net *> src, shape_t param_size, shape_t stride, double sparsity = 1);
-    shape_t getOutputShape();
-    double  getParamNum();
-    double  getInferenceMacNum();
-    double  getPropagationMacNum();
-    double  getUpdateMacNum();
+    Conv2D(std::string name, std::vector<Net *> src, shape_t param_size, shape_t stride, float sparsity = 1.0);
+    uint64_t  getParamNum();
+    uint64_t  getInferenceMacNum();
+    uint64_t  getPropagationMacNum();
+    uint64_t  getUpdateMacNum();
 
     void forwardStaticSparsity();
     void backwardStaticSparsity();

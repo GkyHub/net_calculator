@@ -14,42 +14,6 @@ Net::Net(type_t type, std::string name, std::vector<Net *> src)
 			n->_dst.push_back(n);
 		}
 	}
-    _fp_act_mask = -1.0;
-    _bp_err_mask = -1.0;
-}
-
-void Net::forwardStaticSparsity()
-{
-    for (auto l : _src) {
-        l->maskAct(_fp_act_mask);
-    }
-}
-
-void Net::backwardStaticSparsity()
-{
-    for (auto l : _dst) {
-        l->maskErr(_bp_err_mask);
-    }
-}
-
-void Net::maskAct(double p)
-{
-    if (_fp_act_mask < 0) {
-        _fp_act_mask = p;
-    }
-    else {
-        _fp_act_mask = 1 - (1 - _fp_act_mask) * (1 - p);
-    }    
-}
-
-void Net::maskErr(double p)
-{
-    if (_bp_err_mask < 0) {
-        _bp_err_mask = p;
-    }
-    else {
-        _bp_err_mask = 1 - (1 - _bp_err_mask) * (1 - p);
-    }
 }
 
 //=========================================================
@@ -57,65 +21,57 @@ void Net::maskErr(double p)
 //=========================================================
 Input::Input(shape_t size) : Net(Net::Input, "input", {}) 
 { 
-    _input_size = size; 
-}
-
-shape_t Input::getOutputShape() 
-{ 
-    return _input_size; 
+    _input = Tensor(size); 
 }
 
 //=========================================================
 // class Conv2D
 //=========================================================
-Conv2D::Conv2D(std::string name, std::vector<Net *> src, shape_t param_size, 
-    shape_t stride, double sparsity) : Net(Net::Conv2D, name, {src})
+Conv2D::Conv2D(std::string name, std::vector<Net *> src, shape_t param_shape, 
+    shape_t stride, float sparsity) : Net(Net::Conv2D, name, {src})
 {
-    assert(param_size.size() == 3);
+    assert(param_shape.size() == 3);
     assert(stride.size() == 2);
-    assert(sparsity > 0.0 && sparsity <= 1.0);
-    _param_size = param_size;
+    _kernel = Tensor(param_shape, sparsity);
     _stride = stride;
-    _sparsity = sparsity;
 
     assert(src.size() > 0);
-    _input_size = src[0]->getOutputShape();
-
+    _input = src[0]->output();
+    
     // concat if there are more sources
     if (src.size() > 1) {
         for (uint32_t i = 1; i < src.size(); i++) {
-            assert(concat(_input_size, src[i]->getOutputShape()));
+            assert(_input.Concat(src[i]->output()));
         }
     }
+
+    _output = Tensor({
+        _kernel.shape()[0], 
+        _input.shape()[1] / stride[0],
+        _input.shape()[2] / stride[1]});
 }
 
-shape_t Conv2D::getOutputShape()
+uint64_t Conv2D::getParamNum()
 {
-    return {_param_size[0], 
-            _input_size[1] / _stride[0], 
-            _input_size[2] / _stride[1]};
+    return _kernel.NzVolume();
 }
 
-double  Conv2D::getParamNum()
+uint64_t Conv2D::getInferenceMacNum()
 {
-    return _param_size[0] * _param_size[1] * _param_size[2] * _input_size[0];
+    return _output.NzVolume() * 
+        _kernel.shape()[1] * 
+        _kernel.shape()[2] *
+        _kernel.sparsity() *
+        _input.shape()[0];
 }
 
-// TODO: consider drop out and weight sparsity
-double  Conv2D::getInferenceMacNum()
-{
-    shape_t o_size = getOutputShape();
-    return o_size[0] * o_size[1] * o_size[2] * _param_size[1] * _param_size[2] * _input_size[0];
-}
-
-// TODO: consider error & weight sparsity
-double  Conv2D::getPropagationMacNum()
+uint64_t Conv2D::getPropagationMacNum()
 {
     return getInferenceMacNum();
 }
 
 // TODO: consider error & weight sparsity
-double  Conv2D::getUpdateMacNum()
+uint64_t Conv2D::getUpdateMacNum()
 {
     return getInferenceMacNum();
 }
@@ -142,7 +98,7 @@ FC::FC(std::string name, std::vector<Net *> src, uint32_t neuron_num, double spa
 {
     // concat and flatten
     assert(sparsity > 0.0 && sparsity <= 1.0);
-    _sparsity = sparsity;
+    _sparsity = sparsity;e
 
     _input_size.push_back(0);
     for (auto net : src) {
