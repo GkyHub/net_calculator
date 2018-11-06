@@ -165,13 +165,13 @@ double  FC::getParamNum()
 // TODO: consider drop out and weight sparsity
 double  FC::getInferenceMacNum()
 {
-    return _input_size[0] * _neuron_num;
+    return _input_size[0] * _neuron_num *_sparsity * _fp_act_mask;
 }
 
 // TODO: consider error & weight sparsity
 double  FC::getPropagationMacNum()
 {
-    return _input_size[0] * _neuron_num;
+    return _input_size[0] * _neuron_num * _sparsity * _bp_err_mask;
 }
 
 // TODO: consider error & weight sparsity
@@ -192,6 +192,29 @@ void FC::backwardStaticSparsity()
     for (auto l : _dst) {
         l->maskErr(1.0);
     }
+}
+
+double FC::_getSrcDynamicSparsity()
+{
+    double nz = 0;
+    for (auto l : _src) {
+        nz += volume(l->getOutputShape()) * l->getFpActMask() * l->dynamicActSparsity();
+    }
+    return nz / _input_size[0];
+}
+
+double FC::_getDstDynamicSparsity()
+{
+    if (_dst.empty()) {
+        return 1.0;
+    }
+    
+    double sparsity = _dst[0]->getBpErrMask() * _dst[0]->dynamicErrSparsity();
+    for (int i = 1; i < _dst.size(); i++) {
+        sparsity = 1 - (1 - sparsity) * 
+                       (1 - _dst[i]->getBpErrMask() * _dst[i]->dynamicActSparsity());
+    }
+    return sparsity;
 }
 
 //=========================================================

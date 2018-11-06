@@ -20,6 +20,8 @@ protected:
 public:
     Net(type_t type, std::string name, std::vector<Net *> src);
     type_t          getType() { return _type; };
+    double          getFpActMask() { return _fp_act_mask; };
+    double          getBpErrMask() { return _bp_err_mask; };
 
     virtual shape_t getOutputShape() = 0;
 
@@ -89,6 +91,10 @@ public:
 
     void forwardStaticSparsity();
     void backwardStaticSparsity();
+
+public:
+    double _getSrcDynamicSparsity();
+    double _getDstDynamicSparsity();
 };
 
 class NL : public Net {
