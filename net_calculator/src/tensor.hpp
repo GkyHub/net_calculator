@@ -14,8 +14,8 @@ public:
     Tensor(std::vector<uint32_t> shape, float sparsity = 1.0);
     Tensor() { /* empty constructor */};
 
-    std::vector<uint32_t> shape() { return _shape; };
-    float sparsity() { return _sparsity; };
+    std::vector<uint32_t> shape() const { return _shape; };
+    float sparsity() const { return _sparsity; };
 
     uint64_t Volume() const;    // the number of elements in the tensor
     uint64_t NzVolume() const;  // the number of non-zero elements in the tensor
@@ -27,4 +27,10 @@ public:
 
     // concat a tensor to this one along dim
     bool Concat(const Tensor &t, uint32_t dim = 0);
+
+    // return a 1-dim tensor with the same volume as the original tensor
+    Tensor Flatten();
+
+    // return if a tensor is empty
+    bool Empty();
 };

@@ -36,6 +36,14 @@ bool Tensor::Match(const Tensor &a, const Tensor &b)
 
 bool Tensor::Concat(const Tensor& t, uint32_t dim)
 {
+    // if this tensor is empty, copy the tensor into this one
+    if (Empty()) {
+        _shape = t.shape();
+        _sparsity = t.sparsity();
+        return;
+    }
+
+    // otherwise, try to concat it along the dim dimension
     _sparsity = (t.NzVolume() + NzVolume()) / (t.Volume() + Volume());
     if (t._shape.size() != _shape.size())
     {
@@ -61,4 +69,15 @@ void Tensor::Mask(double nz) {
 
 void Tensor::Fill(double nz) {
     _sparsity = 1 - (1 - _sparsity) * (1 - nz);
+}
+
+Tensor Tensor::Flatten()
+{
+    uint32_t size = Volume();
+    return Tensor({size}, _sparsity);
+}
+
+bool Tensor::Empty()
+{
+    return _shape.empty();
 }
