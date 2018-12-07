@@ -4,7 +4,7 @@
 
 typedef std::vector<uint32_t> shape_t;
 
-// the shape of a tensor, also with the sparsity
+// the shape of a tensor, also with the sparsity (ratio of non-zeros)
 class Tensor {
 private:
     std::vector<uint32_t> _shape;       // the sizes of each dimension of the tensor
@@ -14,13 +14,21 @@ public:
     Tensor(std::vector<uint32_t> shape, float sparsity = 1.0);
     Tensor() { /* empty constructor */};
 
+    // getter
     std::vector<uint32_t> shape() const { return _shape; };
     float sparsity() const { return _sparsity; };
 
-    uint64_t Volume() const;    // the number of elements in the tensor
-    uint64_t NzVolume() const;  // the number of non-zero elements in the tensor
-    void Mask(double nz);       // mask a certain ratio of elements away
-    void Fill(double nz);       // fill a certain ratio of elements as non-zeros
+    // the number of elements in the tensor
+    uint64_t Volume() const;
+
+    // the number of non-zero elements in the tensor    
+    uint64_t NzVolume() const;
+
+    // mask a certain ratio of elements away  
+    void Mask(double nz);
+
+    // fill a certain ratio of elements as non-zeros     
+    void Fill(double nz);
 
     // if two tensors have the same shape
     static bool Match(const Tensor &a, const Tensor &b);

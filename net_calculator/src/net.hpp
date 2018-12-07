@@ -29,7 +29,7 @@ public:
     virtual uint64_t  getUpdateMacNum()       { return 0; };
     virtual uint64_t  getParamNum()           { return 0; };
 
-    // return the dynamic sparsity at runtime
+    // return the ratio of computed zeros
     virtual float fpActSparsity() { return 1.0; };
     virtual float bpErrSparsity() { return 1.0; };
 
