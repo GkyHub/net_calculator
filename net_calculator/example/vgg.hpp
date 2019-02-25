@@ -28,18 +28,18 @@ public:
                 x = add(NL(
                     "relu" + std::to_string(i + 1) + std::to_string(j + 1),
                     x,
-                    NL::Type::RELU
+                    NL::RELU
                 ));
             }
 
-            x = add(Pool("pool" + std::to_string(i + 1), x, Pool::Type::MAX, {2, 2}, {2, 2}));
+            x = add(Pool("pool" + std::to_string(i + 1), x, Pool::MAX, {2, 2}, {2, 2}));
         }
 
         x = add(FC("fc1", {x}, 4096));
-        x = add(NL("relu6", x, NL::Type::RELU));
+        x = add(NL("relu6", x, NL::RELU));
         x = add(FC("fc2", {x}, 4096));
-        x = add(NL("relu7", x, NL::Type::RELU));
+        x = add(NL("relu7", x, NL::RELU));
         x = add(FC("fc3", {x}, 1000));
-        x = add(NL("relu8", x, NL::Type::RELU));
+        x = add(NL("relu8", x, NL::RELU));
     }
 };

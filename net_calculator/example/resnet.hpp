@@ -31,8 +31,8 @@ public:
         Net *x = add(Input({3, 224, 224}));
 
         x = add(Conv2D("conv1", {x}, {size[0], 7, 7}, {2, 2}));
-        x = add(NL("relu1", x, NL::Type::RELU));
-        x = add(Pool("pool1", x, Pool::Type::MAX, {2, 2}, {2, 2}));
+        x = add(NL("relu1", x, NL::RELU));
+        x = add(Pool("pool1", x, Pool::MAX, {2, 2}, {2, 2}));
         
         for (uint32_t i = 0; i < 4; i++) {
             for (uint32_t j = 0; j < num[i]; j++) {
@@ -44,7 +44,7 @@ public:
                     );
             }
         }
-        x = add(Pool("avg_pool", x, Pool::Type::GLOBAL, {1, 1}, {0, 0}));
+        x = add(Pool("avg_pool", x, Pool::GLOBAL, {1, 1}, {0, 0}));
         x = add(FC("fc", {x}, 1000));
     }
 
@@ -56,15 +56,15 @@ public:
         shape_t s = {stride, stride};
 
         x = add(Conv2D(name + "_conv1", {x}, {out_channel, 3, 3}, s));
-        x = add(NL(name + "_relu1", x, NL::Type::RELU));
+        x = add(NL(name + "_relu1", x, NL::RELU));
         x = add(Conv2D(name + "_conv2", {x}, {out_channel, 3, 3}, {1, 1}));
 
-        if (!match(x->getOutputShape(), src->getOutputShape())) {
+        if (!Tensor::Match(x->output(), src->output())) {
             shortcut = add(Conv2D(name + "_short", {src}, {out_channel, 1, 1}, s));
         }
 
         x = add(EleWise(name + "_add", x, shortcut));
-        x = add(NL(name + "_relu2", x, NL::Type::RELU));
+        x = add(NL(name + "_relu2", x, NL::RELU));
 
         return x;
     }
@@ -77,17 +77,17 @@ public:
         shape_t s = {stride, stride};
 
         x = add(Conv2D(name + "_conv1", {x}, {out_channel / 4, 1, 1}, s));
-        x = add(NL(name + "_relu1", x, NL::Type::RELU));
+        x = add(NL(name + "_relu1", x, NL::RELU));
         x = add(Conv2D(name + "_conv2", {x}, {out_channel / 4, 3, 3}, {1, 1}));
-        x = add(NL(name + "_relu2", x, NL::Type::RELU));
+        x = add(NL(name + "_relu2", x, NL::RELU));
         x = add(Conv2D(name + "_conv3", {x}, {out_channel, 1, 1}, {1, 1}));
 
-        if (!match(x->getOutputShape(), src->getOutputShape())) {
+        if (!Tensor::Match(x->output(), src->output())) {
             shortcut = add(Conv2D(name + "_short", {src}, {out_channel, 1, 1}, s));
         }
 
         x = add(EleWise(name + "_add", x, shortcut));
-        x = add(NL(name + "_relu3", x, NL::Type::RELU));
+        x = add(NL(name + "_relu3", x, NL::RELU));
 
         return x;
     }
